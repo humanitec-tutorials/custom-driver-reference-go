@@ -1,0 +1,112 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "",
+    "version": ""
+  },
+  "paths": {
+    "/entities/{id}": {
+      "get": {
+        "tags": [
+          "public",
+          "Entity",
+          "id-5aa5c2f2bd3cc24d"
+        ],
+        "summary": "Returns the Entity details.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The Entity ID.\n\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rhe Entity details.\n\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters or payload. E.g. invalid `id` format.\n\n"
+          },
+          "401": {
+            "description": "Required HTTP Authorization header is missing or malformed.\n\n"
+          },
+          "500": {
+            "description": "Internal application error.\n\n"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EntityRequest": {
+        "description": "An Entity.",
+        "properties": {
+          "id": {
+            "description": "The unique ID for the Entity.",
+            "pattern": "^[a-z0-9][a-z0-9-]+[a-z0-9]$",
+            "type": "string"
+          },
+          "name": {
+            "description": "The human friendly name for the Entity.",
+            "type": "string"
+          },
+          "status": {
+            "description": "The Entity status.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EntityResponse": {
+        "description": "An Entity.",
+        "properties": {
+          "created_at": {
+            "description": "The timestamp when the Entity was created.",
+            "example": "2020-06-22T09:37:23.523Z",
+            "nullable": true,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$",
+            "title": "Simplified extended ISO format date/time string.",
+            "type": "string"
+          },
+          "created_by": {
+            "description": "The User ID who has created the Entity.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique ID for the Entity.",
+            "pattern": "^[a-z0-9][a-z0-9-]+[a-z0-9]$",
+            "type": "string"
+          },
+          "name": {
+            "description": "The human friendly name for the Entity.",
+            "type": "string"
+          },
+          "status": {
+            "description": "The Entity status.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "created_by"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

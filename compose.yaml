@@ -1,0 +1,30 @@
+services:
+
+  server:
+    build:
+      context: .
+      args:
+        - GOPRIVATE
+        - HUMANITEC_GOMOD_USER
+        - HUMANITEC_GOMOD_TOKEN
+    ports:
+      - "8080:8080"
+#    depends_on:
+#      - db
+#    environment:
+#      DATABASE_HOST: db
+#      DATABASE_PORT: 5432
+#      DATABASE_NAME: service-db
+#      DATABASE_USER: root
+#      DATABASE_PASSWORD: PassW0rd
+
+#  db:
+#    image: postgres:11
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - /var/lib/postgresql/data/
+#    environment:
+#      POSTGRES_DB: service-db
+#      POSTGRES_USER: root
+#      POSTGRES_PASSWORD: PassW0rd
