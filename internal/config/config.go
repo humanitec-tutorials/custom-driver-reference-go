@@ -10,16 +10,10 @@ import (
 
 // Configuration ...
 type Configuration struct {
-	DatabaseName     string `mapstructure:"DATABASE_NAME"`
-	DatabaseUser     string `mapstructure:"DATABASE_USER"`
-	DatabasePassword string `mapstructure:"DATABASE_PASSWORD"`
-	DatabaseHost     string `mapstructure:"DATABASE_HOST"`
-	DatabasePort     string `mapstructure:"DATABASE_PORT"`
-
-	// TODO: Add your own properties
-
-	DataDogEnabled bool   `mapstructure:"DD_ENABLE"`
-	LogLevel       string `mapstructure:"LOG_LEVEL"`
+	Host          string `mapstructure:"HOST"`
+	Port          int    `mapstructure:"PORT" validate:"required"`
+	LogLevel      string `mapstructure:"LOG_LEVEL"`
+	FakeAWSClient bool   `mapstructure:"FAKE_AWS_CLIENT"`
 }
 
 // GetConfig Gets configuration from environment variables
@@ -28,9 +22,8 @@ func GetConfig() (*Configuration, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	conf := &Configuration{
-		DatabaseHost:   "localhost",
-		DatabasePort:   "5432",
-		DataDogEnabled: false,
+		Host: "",
+		Port: 8080,
 	}
 
 	// Workaround for the viper to use environment variables without reading a config file

@@ -2,9 +2,7 @@ package api
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/humanitec/golib/hlogger"
-
-	"humanitec.io/go-service-template/internal/model"
+	"humanitec.io/custom-reference-driver/internal/aws"
 )
 
 // Server contains routes, handlers, configuration for the API server
@@ -15,25 +13,16 @@ type Server interface {
 // NewServer initializes new Server instance
 func NewServer(
 	appName string,
+	newAwsClient func(string, string, string) (aws.Client, error),
 
-	// TODO: Add your server attributes here
-
-	db model.Databaser,
-	logger *hlogger.HLogger,
 ) Server {
 	return &apiServer{
-		Name: appName,
-
-		databaser: db,
-		logger:    logger,
+		Name:         appName,
+		newAwsClient: newAwsClient,
 	}
 }
 
 type apiServer struct {
-	Name string
-
-	// TODO: Add your server attributes here
-
-	databaser model.Databaser
-	logger    *hlogger.HLogger
+	Name         string
+	newAwsClient func(string, string, string) (aws.Client, error)
 }

@@ -1,4 +1,4 @@
-package testutil
+package testutils
 
 import (
 	"bytes"
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/schema"
 )
 
-// ExecuteTestRequest Makes a test request, returns response recorder.
-func ExecuteTestRequest(t *testing.T, ctx context.Context, router *mux.Router, method, url, authHeader string, body interface{}, queryParams interface{}) *httptest.ResponseRecorder {
+func ExecuteTestRequest(ctx context.Context, t *testing.T, router *mux.Router, method, url string, headers map[string]string, body interface{}) *httptest.ResponseRecorder {
 	var req *http.Request
 	var err error
 	if body == nil {
@@ -35,15 +33,8 @@ func ExecuteTestRequest(t *testing.T, ctx context.Context, router *mux.Router, m
 		t.Errorf("creating request: %v", err)
 	}
 
-	if authHeader != "" {
-		req.Header.Add("From", authHeader)
-	}
-
-	if queryParams != nil {
-		q := req.URL.Query()
-		var encoder = schema.NewEncoder()
-		encoder.Encode(queryParams, q)
-		req.URL.RawQuery = q.Encode()
+	for key, val := range headers {
+		req.Header.Add(key, val)
 	}
 
 	w := httptest.NewRecorder()

@@ -16,7 +16,7 @@
 
 ```
 go generate ./...
-go test ./... [-v] [-cover] [-race]```
+go test ./... [-v] [-cover] [-race]
 ```
 
 ## Running tests in docker-compose

@@ -26,14 +26,14 @@ func TestConfig(t *testing.T) {
 }
 
 func TestConfigFromEnv(t *testing.T) {
-	expectedDataDogEnabled := true
+	expectedFakeAWSClientEnabled := true
 	expectedLogLevel := "info"
-	t.Setenv("DD_ENABLE", strconv.FormatBool(expectedDataDogEnabled))
+	t.Setenv("FAKE_AWS_CLIENT", strconv.FormatBool(expectedFakeAWSClientEnabled))
 	t.Setenv("LOG_LEVEL", expectedLogLevel)
 
 	conf, err := GetConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedDataDogEnabled, conf.DataDogEnabled)
+	assert.Equal(t, expectedFakeAWSClientEnabled, conf.FakeAWSClient)
 	assert.Equal(t, expectedLogLevel, conf.LogLevel)
 }
