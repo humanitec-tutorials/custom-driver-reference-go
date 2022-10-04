@@ -5,7 +5,7 @@
     "version": ""
   },
   "paths": {
-    "/entities/{id}": {
+    "/s3/{id}": {
       "put": {
         "summary": "Create or updates a resource",
         "description": "The request body contains a declarative definition of the resource. There should only be one instance of a resource for a specific `gurid`.\n",

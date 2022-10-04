@@ -43,29 +43,5 @@ Configuration sources:
 
 ## Running the server
 
-```go run ./cmd/server [-c <config_file>] [-h <host>] [-p <port>] -```
+```go run ./ [-c <config_file>] [-h <host>] [-p <port>] -```
 
-## Running tests
-
-```
-go generate ./...
-go test ./... [-v] [-cover] [-race]
-```
-
-## Running tests in docker-compose
-
-```
-# Run docker-compose:
-docker-compose up --build
-
-# Run tests:
-docker-compose exec server go test ./...
-```
-
-## Integration tests
-
-Build the image and run it with docker-compose (in the root of the repo):
-
-```
-docker-compose up --build
-```

@@ -1,23 +1,33 @@
-package aws
+package main
 
 import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func (c awsClient) CreateBucket(ctx context.Context, bucketName string) (string, error) {
-	svc := s3.New(c.sess)
+func createBucket(ctx context.Context, accessKeyId string, secretAccessKey string, region string, bucketName string) (string, error) {
+	creds := credentials.NewStaticCredentials(accessKeyId, secretAccessKey, "")
+	config := aws.Config{
+		Credentials: creds,
+		Region:      &region,
+	}
+	sess, err := session.NewSession(&config)
+	if err != nil {
+		return "", err
+	}
+	svc := s3.New(sess)
 
 	createBucketInput := &s3.CreateBucketInput{
 		Bucket: aws.String(bucketName),
 		CreateBucketConfiguration: &s3.CreateBucketConfiguration{
-			LocationConstraint: aws.String(c.region),
+			LocationConstraint: aws.String(region),
 		},
 	}
 	if _, err := svc.CreateBucketWithContext(ctx, createBucketInput); err != nil {
@@ -40,11 +50,20 @@ func (c awsClient) CreateBucket(ctx context.Context, bucketName string) (string,
 		return "", fmt.Errorf(`waiting for s3 bucket "%s" to be provisioned: %w`, bucketName, err)
 	}
 
-	return c.region, nil
+	return region, nil
 }
 
-func (c awsClient) DeleteBucket(ctx context.Context, bucketName string) error {
-	svc := s3.New(c.sess)
+func deleteBucket(ctx context.Context, accessKeyId string, secretAccessKey string, region string, bucketName string) error {
+	creds := credentials.NewStaticCredentials(accessKeyId, secretAccessKey, "")
+	config := aws.Config{
+		Credentials: creds,
+		Region:      &region,
+	}
+	sess, err := session.NewSession(&config)
+	if err != nil {
+		return err
+	}
+	svc := s3.New(sess)
 
 	// Empty bucket, before it can be deleted.
 	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
@@ -57,7 +76,7 @@ func (c awsClient) DeleteBucket(ctx context.Context, bucketName string) error {
 	input := &s3.DeleteBucketInput{
 		Bucket: aws.String(bucketName),
 	}
-	_, err := svc.DeleteBucketWithContext(ctx, input)
+	_, err = svc.DeleteBucketWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf(`deleting s3 bucket "%s": %w`, bucketName, err)
 	}

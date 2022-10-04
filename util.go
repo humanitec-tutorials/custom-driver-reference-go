@@ -1,6 +1,7 @@
-package api
+package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,8 +9,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-
-	herrors "humanitec.io/custom-reference-driver/internal/errors"
 )
 
 var validID = regexp.MustCompile(`^[a-z0-9][a-z0-9-]+[a-z0-9]$`)
@@ -68,22 +67,25 @@ func readAsJSON(r io.Reader, obj interface{}) error {
 	return json.NewDecoder(r).Decode(obj)
 }
 
-// writeError sends the error message as an HTTP Response
-func writeError(w http.ResponseWriter, httpStatusCode int, message string, err error) {
-	if httpStatusCode <= 0 {
-		httpStatusCode = http.StatusInternalServerError
+// Encode Marshals data into JSON and Base64-encodes the result.
+func cookiesEncode(data interface{}) (string, error) {
+	if data == nil {
+		return "", nil
 	}
 
-	var humanitecErr *herrors.HumanitecError
-	if err == nil || !errors.As(err, &humanitecErr) {
-		humanitecErr = herrors.New("RES-001", message, map[string]interface{}{"error": fmt.Sprintf("%v", err)}, err)
+	bytes, err := json.Marshal(data)
+	return base64.StdEncoding.EncodeToString(bytes), err
+}
+
+// Decodes Base64-decodes the cookie and unmarshals the data from JSON.
+func cookiesDecode(cookie string, data interface{}) error {
+	if cookie == "" {
+		return nil
+	}
+
+	if bytes, err := base64.StdEncoding.DecodeString(cookie); err != nil {
+		return err
 	} else {
-		if humanitecErr.Details == nil {
-			humanitecErr.Details = map[string]interface{}{}
-		}
-		humanitecErr.Details["error"] = fmt.Sprintf("%v", err)
+		return json.Unmarshal(bytes, data)
 	}
-
-	log.Printf("(HTTP %d) %v\n", httpStatusCode, humanitecErr)
-	writeAsJSON(w, httpStatusCode, humanitecErr)
 }
