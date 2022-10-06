@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -12,7 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func createBucket(ctx context.Context, accessKeyId string, secretAccessKey string, region string, bucketName string) (string, error) {
+type BucketStatus uint8
+
+const (
+	BucketCreated  BucketStatus = 0
+	BucketFound    BucketStatus = 1
+	BucketNotFound BucketStatus = 2
+	BucketError    BucketStatus = 255
+)
+
+func getS3(accessKeyId string, secretAccessKey string, region string) (*s3.S3, error) {
 	creds := credentials.NewStaticCredentials(accessKeyId, secretAccessKey, "")
 	config := aws.Config{
 		Credentials: creds,
@@ -20,10 +29,13 @@ func createBucket(ctx context.Context, accessKeyId string, secretAccessKey strin
 	}
 	sess, err := session.NewSession(&config)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	svc := s3.New(sess)
+	return svc, nil
+}
 
+func createBucket(ctx context.Context, svc *s3.S3, region string, bucketName string) (string, error) {
 	createBucketInput := &s3.CreateBucketInput{
 		Bucket: aws.String(bucketName),
 		CreateBucketConfiguration: &s3.CreateBucketConfiguration{
@@ -43,27 +55,30 @@ func createBucket(ctx context.Context, accessKeyId string, secretAccessKey strin
 		return "", fmt.Errorf(`creating s3 bucket "%s": %w`, bucketName, err)
 	}
 
-	headBucketInput := &s3.HeadBucketInput{
-		Bucket: aws.String(bucketName),
-	}
-	if err := svc.WaitUntilBucketExists(headBucketInput); err != nil {
-		return "", fmt.Errorf(`waiting for s3 bucket "%s" to be provisioned: %w`, bucketName, err)
-	}
-
 	return region, nil
 }
 
-func deleteBucket(ctx context.Context, accessKeyId string, secretAccessKey string, region string, bucketName string) error {
-	creds := credentials.NewStaticCredentials(accessKeyId, secretAccessKey, "")
-	config := aws.Config{
-		Credentials: creds,
-		Region:      &region,
+func headBucket(ctx context.Context, svc *s3.S3, bucketName string) (BucketStatus, error) {
+	headBucketInput := &s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
 	}
-	sess, err := session.NewSession(&config)
-	if err != nil {
-		return err
+	if _, err := svc.HeadBucketWithContext(ctx, headBucketInput); err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case s3.ErrCodeNoSuchBucket:
+				return BucketNotFound, nil
+			default:
+				return BucketError, err
+			}
+		} else {
+			return BucketError, err
+		}
+	} else {
+		return BucketFound, nil
 	}
-	svc := s3.New(sess)
+}
+
+func deleteBucket(ctx context.Context, svc *s3.S3, bucketName string) error {
 
 	// Empty bucket, before it can be deleted.
 	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
@@ -76,7 +91,7 @@ func deleteBucket(ctx context.Context, accessKeyId string, secretAccessKey strin
 	input := &s3.DeleteBucketInput{
 		Bucket: aws.String(bucketName),
 	}
-	_, err = svc.DeleteBucketWithContext(ctx, input)
+	_, err := svc.DeleteBucketWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf(`deleting s3 bucket "%s": %w`, bucketName, err)
 	}
